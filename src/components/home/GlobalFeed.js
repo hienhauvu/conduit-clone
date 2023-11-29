@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import Favorite from "./Favorite";
 
-const GlobalFeed = ({ articles: globalArticles, loading: globalLoading }) => {
+const GlobalFeed = ({ selectedTag }) => {
   const [articles, setArticles] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -14,11 +14,15 @@ const GlobalFeed = ({ articles: globalArticles, loading: globalLoading }) => {
   useEffect(() => {
     const fetchArticles = async () => {
       try {
-        setLoading(globalLoading);
-        setArticles([]);
-        const response = await axios.get(
-          "https://api.realworld.io/api/articles"
-        );
+        setLoading(true);
+        let apiUrl = "https://api.realworld.io/api/articles";
+        
+        // If a tag is selected, add tag filtering to the API endpoint
+        if (selectedTag) {
+          apiUrl += `?tag=${selectedTag}`;
+        }
+
+        const response = await axios.get(apiUrl);
         setArticles(response.data.articles);
         console.log("Fetched Articles:", response.data.articles);
       } catch (error) {
@@ -29,52 +33,21 @@ const GlobalFeed = ({ articles: globalArticles, loading: globalLoading }) => {
     };
 
     fetchArticles();
-  }, [globalLoading]);
+  }, [selectedTag]);
 
-  const handleUpdateFavorite = async (updatedArticle) => {
-    const userToken = localStorage.getItem("userToken");
-  
-    try {
-      // Find the index of the updated article in the state
-      const updatedIndex = articles.findIndex(
-        (article) => article.slug === updatedArticle.slug
-      );
-  
-      if (updatedIndex !== -1) {
-        // Update the state optimistically
-        setArticles((prevArticles) => {
-          const newArticles = [...prevArticles];
-          newArticles[updatedIndex] = {
-            ...prevArticles[updatedIndex],
-            favorited: updatedArticle.favorited,
-            favoritesCount: updatedArticle.favoritesCount,
-          };
-          return newArticles;
-        });
-  
-        // Send a request to update the favorite status on the server
-        await axios.post(
-          `https://api.realworld.io/api/articles/${updatedArticle.slug}/favorite`,
-          {},
-          {
-            headers: {
-              Authorization: `Bearer ${userToken}`,
-            },
-          }
-        );
-  
-        // Fetch the updated article after the request to get the latest data
-        const response = await axios.get(`https://api.realworld.io/api/articles/${updatedArticle.slug}`);
-        
-        // Update the state with the actual response from the server
-        setArticles((prevArticles) => {
-          const newArticles = [...prevArticles];
-          newArticles[updatedIndex] = response.data.article;
-          return newArticles;
-        });
-      }
-    } catch (error) {
-      console.error("Error updating favorite status:", error);
+  const handleUpdateFavorite = (updatedArticle) => {
+    // Find the index of the updated article in the state
+    const updatedIndex = articles.findIndex(
+      (article) => article.slug === updatedArticle.slug
+    );
+
+    if (updatedIndex !== -1) {
+      // Update the state with the modified article
+      setArticles((prevArticles) => {
+        const newArticles = [...prevArticles];
+        newArticles[updatedIndex] = updatedArticle;
+        return newArticles;
+      });
     }
   };
   

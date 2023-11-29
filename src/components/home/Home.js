@@ -8,6 +8,10 @@ import Tags from "./Tags";
 import "../../css/Home.css";
 
 const Home = () => {
+  const userToken = localStorage.getItem("userToken");
+
+  const [feedStatus, setFeedStatus] = useState(userToken ? "your" : "global");
+
   const [tags, setTags] = useState([]);
   const [articles, setArticles] = useState([]);
   const [loadingTags, setLoadingTags] = useState(true);
@@ -55,39 +59,15 @@ const Home = () => {
   }, []);
 
   useEffect(() => {
+    // Fetch articles when selectedTag or currentPage changes
     const fetchArticles = async () => {
       try {
         setLoadingArticles(true);
-        setArticles([]);
-        let apiUrl = "https://api.realworld.io/api/articles";
-  
-        // if (currentTab === "Global Feed") {
-        //   apiUrl += `?${selectedTag ? `tag=${selectedTag}&` : ""}limit=10&offset=${(currentPage - 1) * 10}`;
-        // } else if (currentTab === "Your Feed" && user) {
-        //   apiUrl = `https://api.realworld.io/api/articles/feed?limit=10&offset=${(currentPage - 1) * 10}`;
-        // }
-
-        if (currentTab === "Global Feed") {
-          apiUrl += `?${selectedTag ? `tag=${selectedTag}&` : ""}limit=10&offset=${(currentPage - 1) * 10}`;
-        } else if (currentTab === "Your Feed" && user) {
-          const userToken = localStorage.getItem("userToken");
-          apiUrl = `https://api.realworld.io/api/articles/feed?limit=10&offset=${(currentPage - 1) * 10}`;
-          
-          const response = await axios.get(apiUrl, {
-            headers: {
-              Authorization: `Bearer ${userToken}`,
-            },
-          });
-          console.log("Fetched Your Feed Articles:", response.data.articles);
-
-          // Update total articles for Your Feed based on the response
-          setTotalArticles(response.data.articlesCount);
-
-          // Set the articles for Your Feed
-          setArticles(response.data.articles);
-        }
-  
-        const response = await fetch(apiUrl);
+        const response = await fetch(
+          `https://api.realworld.io/api/articles?limit=197${
+            selectedTag ? `&tag=${selectedTag}` : ""
+          }&offset=${(currentPage - 1) * articlesPerPage}`
+        );
         const data = await response.json();
         console.log("Fetched Articles:", data.articles);
   
@@ -110,7 +90,7 @@ const Home = () => {
     }
   
     fetchArticles();
-  }, [selectedTag, currentTab, currentPage, user]);
+  }, [selectedTag, currentPage]);
 
   const totalPages = Math.ceil(totalArticles / 10);
   console.log("Total Pages:", totalPages);
@@ -149,6 +129,12 @@ const Home = () => {
     setSelectedTag(tag);
   };
 
+  const handleFeedStatusChange = (newFeedStatus) => {
+    setFeedStatus(newFeedStatus);
+    setSelectedTag(null); // Reset selected tag when changing feed status
+    setCurrentPage(1); // Reset current page to 1 when changing feed status
+  };
+
   return (
     <div>
       <div className="home-page">
@@ -177,34 +163,54 @@ const Home = () => {
                     </li>
                   )}
                   <li className="nav-item">
-                    <NavLink
-                      to="/"
-                      className={`nav-link ${!selectedTag || currentTab === "Global Feed" ? "active" : ""}`}
-                      onClick={handleGlobalFeedClick}
-                      end
+                    <div
+                      className={`nav-link ${
+                        feedStatus === "your" ? "active" : ""
+                      }`}
+                      style={{ cursor: "pointer", color: "#aaa" }}
+                      onClick={() => handleFeedStatusChange("your")}
+                    >
+                      Your Feed
+                    </div>
+                  </li>
+                  <li className="nav-item">
+                    <div
+                      className={`nav-link ${
+                        !selectedTag && feedStatus !== "your" ? "active" : ""
+                      }`}
+                      onClick={() => {
+                        setSelectedTag(null);
+                        handleFeedStatusChange("global");
+                      }}
+                      style={{ color: "#aaa", cursor: "pointer" }}
                     >
                       Global Feed
-                    </NavLink>
+                    </div>
                   </li>
                   {selectedTag && (
                     <li className="nav-item">
-                      <a className="nav-link active" href="">
+                      <div
+                        className="nav-link active"
+                        style={{ cursor: "pointer" }}
+                      >
                         #{selectedTag}
-                      </a>
+                      </div>
                     </li>
                   )}
                 </ul>
               </div>
 
-              {!loadingArticles && currentTab === "Your Feed" && user && (
+              {feedStatus === "your" ? (
                 <YourFeed
-                  articles={currentTab === "Your Feed" ? currentArticles : []}
+                  articles={currentArticles}
                   loading={loadingArticles}
                 />
-              )}
-
-              {!loadingArticles && (
-                <GlobalFeed articles={currentArticles} loading={loadingArticles} />
+              ) : (
+                <GlobalFeed
+                  articles={currentArticles}
+                  loading={loadingArticles}
+                  selectedTag={selectedTag}
+                />
               )}
 
               {!loadingArticles && totalPages > 1 && (

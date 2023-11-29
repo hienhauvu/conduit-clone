@@ -2,8 +2,8 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { useParams } from "react-router-dom";
 import FollowButton from "../buttons/FollowButton";
-import "../../css/Articles.css";
 import FavoriteButton from "../buttons/FavoriteButton";
+import "../../css/Articles.css";
 
 const Articles_View = () => {
   const { slug } = useParams();
@@ -25,9 +25,15 @@ const Articles_View = () => {
 
         // Fetch author's profile after getting the article
         fetchAuthorProfile(response.data.article.author.username);
+        setIsFavorited(response.data.article.favorited);
+        setFavCount(response.data.article.favoritesCount);
+
+        console.log(response.data.article.favorited);
+        console.log(response.data.article.favoritesCount);
+        // Fetch article's favorite count and status
+
+        document.title = response.data.article.title;
         //Fetch Favorited status
-        setIsFavorited(response.data.article.favorited)
-        console.log("isFavorited: ", isFavorited);
       } catch (error) {
         console.error("Error fetching article:", error);
       }
@@ -46,7 +52,6 @@ const Articles_View = () => {
         setUser(response.data.profile);
         setIsFollowing(response.data.profile.following);
         console.log("Is Followed: ", response.data.profile.following);
-
       } catch (error) {
         console.error("Error fetching author profile:", error);
       }
@@ -59,11 +64,6 @@ const Articles_View = () => {
   const handleUpdateFollow = (updatedProfile) => {
     setUser(updatedProfile);
     setIsFollowing(updatedProfile.following);
-  };
-
-  const handleUpdateFavorite = (updatedArticle) => {
-    setArticle(updatedArticle);
-    setFavCount(updatedArticle.favoritesCount);
   };
 
   if (!article || !user) {
@@ -102,12 +102,8 @@ const Articles_View = () => {
                 onUpdateFollow={handleUpdateFollow}
                 pageStyle="article-button"
               />
-              <FavoriteButton
-              key={isFavorited? "favorited" : "notFavorited"}
-              articleSlug={slug}
-              favCount={article.favoritesCount}
-              onUpdateFavorite={handleUpdateFavorite}
-              />
+              {/* Favorite Button */}
+              <FavoriteButton articleSlug={article.slug} />
             </span>
             {/* IF CURRENT USER IS AUTHOR */}
             <span style={{ display: "none" }}>
@@ -151,12 +147,7 @@ const Articles_View = () => {
                 onUpdateFollow={handleUpdateFollow}
                 pageStyle="article-button"
               />
-              <FavoriteButton
-              key={isFavorited? "favorited" : "notFavorited"}
-              articleSlug={slug}
-              favCount={article.favoritesCount}
-              onUpdateFavorite={handleUpdateFavorite}
-              />
+              <FavoriteButton articleSlug={article.slug} />
             </span>
             {/* IF CURRENT USER IS AUTHOR */}
             <span style={{ display: "none" }}>

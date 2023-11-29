@@ -1,10 +1,11 @@
-// FavoriteButton.js
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 
-const FavoriteButton = ({ articleSlug, onUpdateFavorite, favCount }) => {
-  const [isFavorited, setIsFavorited] = useState(false);
+const FavoriteButton = ({ articleSlug }) => {
+  const [isFavoriting, setIsFavoriting] = useState(false);
+  const [favCount, setFavCount] = useState(0);
   const [isToggling, setIsToggling] = useState(false);
+  const [check, setCheck] = useState(false); // Add a state for re-render check
 
   const userToken = localStorage.getItem("userToken");
 
@@ -19,20 +20,23 @@ const FavoriteButton = ({ articleSlug, onUpdateFavorite, favCount }) => {
             },
           }
         );
-        setIsFavorited(response.data.article.favorited);
+        setIsFavoriting(response.data.article.favorited);
+        setFavCount(response.data.article.favoritesCount);
+        setCheck(!check); // Toggle the check variable to trigger re-render
       } catch (error) {
         console.error("Error fetching favorite status:", error);
       }
     };
 
     fetchFavoriteStatus();
-  }, [articleSlug, userToken]);
+  }, [articleSlug, userToken, check]); // Include check variable in dependencies
 
   const handleFavoriteToggle = async () => {
     try {
       setIsToggling(true);
 
-      if (isFavorited) {
+      if (isFavoriting) {
+        // If already favorited, perform unfavorite using DELETE
         await axios.delete(
           `https://api.realworld.io/api/articles/${articleSlug}/favorite`,
           {
@@ -42,6 +46,7 @@ const FavoriteButton = ({ articleSlug, onUpdateFavorite, favCount }) => {
           }
         );
       } else {
+        // If not favorited, perform favorite using POST
         await axios.post(
           `https://api.realworld.io/api/articles/${articleSlug}/favorite`,
           null,
@@ -53,7 +58,7 @@ const FavoriteButton = ({ articleSlug, onUpdateFavorite, favCount }) => {
         );
       }
 
-      // Update favorite status after the toggle
+      // Update favorite status and count after the toggle
       const response = await axios.get(
         `https://api.realworld.io/api/articles/${articleSlug}`,
         {
@@ -62,8 +67,9 @@ const FavoriteButton = ({ articleSlug, onUpdateFavorite, favCount }) => {
           },
         }
       );
-
-      onUpdateFavorite(response.data.article);
+      setIsFavoriting(response.data.article.favorited);
+      setFavCount(response.data.article.favoritesCount);
+      setCheck(!check); // Toggle the check variable to trigger re-render
     } catch (error) {
       console.error("Error toggling favorite:", error);
     } finally {
@@ -74,8 +80,8 @@ const FavoriteButton = ({ articleSlug, onUpdateFavorite, favCount }) => {
   return (
     <button
       className={`btn btn-sm ${
-        isFavorited ? "btn-danger" : "btn-outline-danger"
-      }`}
+        isFavoriting ? "btn-danger" : "btn-outline-danger"
+      } article-button`}
       onClick={handleFavoriteToggle}
       disabled={isToggling}
       style={{
@@ -86,10 +92,10 @@ const FavoriteButton = ({ articleSlug, onUpdateFavorite, favCount }) => {
       }}
     >
       <i
-        className={`bi ${isFavorited ? "bi-suit-heart-fill" : "bi-suit-heart"}`}
+        className={`bi ${isFavoriting ? "bi-suit-heart-fill" : "bi-suit-heart"}`}
         style={{ marginRight: "0.2rem", fontSize: "1rem" }}
       ></i>
-      {isFavorited ? "Unfavorite" : "Favorite"} ({favCount})
+      {isFavoriting ? "Unfavorite" : "Favorite"} ({favCount})
     </button>
   );
 };
