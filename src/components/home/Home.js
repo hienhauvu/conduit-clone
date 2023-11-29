@@ -1,6 +1,4 @@
 import React, { useState, useEffect } from "react";
-import { NavLink } from "react-router-dom";
-import axios from "axios";
 import GlobalFeed from "./GlobalFeed";
 import YourFeed from "./YourFeed";
 import Pagination from "./Pagination";
@@ -18,30 +16,11 @@ const Home = () => {
   const [loadingArticles, setLoadingArticles] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedTag, setSelectedTag] = useState(null);
-  const [user, setUser] = useState(null);
-  const [currentTab, setCurrentTab] = useState("Global Feed");
-  const [totalArticles, setTotalArticles] = useState(0);
+  const articlesPerPage = 10;
 
   useEffect(() => {
     document.title = "Home -- Conduit";
-
-    const fetchUser = async () => {
-      const userToken = localStorage.getItem("userToken");
-      if (userToken) {
-        try {
-          const response = await fetch("https://api.realworld.io/api/user", {
-            headers: {
-              Authorization: `Bearer ${userToken}`,
-            },
-          });
-          const userData = await response.json();
-          setUser(userData.user);
-        } catch (error) {
-          console.error("Error fetching user data:", error);
-        }
-      }
-    };
-
+    // Fetch tags only once when the component mounts
     const fetchTags = async () => {
       try {
         const response = await fetch("https://api.realworld.io/api/tags");
@@ -53,8 +32,6 @@ const Home = () => {
         setLoadingTags(false);
       }
     };
-
-    fetchUser();
     fetchTags();
   }, []);
 
@@ -69,31 +46,18 @@ const Home = () => {
           }&offset=${(currentPage - 1) * articlesPerPage}`
         );
         const data = await response.json();
-        console.log("Fetched Articles:", data.articles);
-  
-        // Update total articles based on the response
-        if (currentTab === "Global Feed") {
-          setTotalArticles(data.articlesCount);
-        }
-  
         setArticles(data.articles);
       } catch (error) {
-        console.error(`Error fetching articles for tab ${selectedTag}:`, error);
+        console.error(`Error fetching articles for tag ${selectedTag}:`, error);
       } finally {
         setLoadingArticles(false);
       }
     };
-  
-    // If the current tab is "Your Feed," set the current tab to "Global Feed" when the selected tag changes
-    if (currentTab === "Your Feed" && selectedTag) {
-      setCurrentTab("Global Feed");
-    }
-  
     fetchArticles();
   }, [selectedTag, currentPage]);
 
-  const totalPages = Math.ceil(totalArticles / 10);
-  console.log("Total Pages:", totalPages);
+  const totalArticles = articles.length;
+  const totalPages = Math.ceil(totalArticles / articlesPerPage);
 
   const handlePageChange = (pageNumber) => setCurrentPage(pageNumber);
   const goToPreviousPage = () => {
@@ -108,20 +72,9 @@ const Home = () => {
     }
   };
 
-  const startIndex = (currentPage - 1) * 10;
-  const endIndex = startIndex + 10;
-  const currentArticles = articles ? articles.slice(startIndex, endIndex) : [];
-
-  const handleYourFeedClick = (e) => {
-    e.preventDefault();
-    setCurrentTab("Your Feed");
-    setSelectedTag(null);
-  };
-
-  const handleGlobalFeedClick = () => {
-    setCurrentTab("Global Feed");
-    setSelectedTag(null);
-  };
+  const startIndex = (currentPage - 1) * articlesPerPage;
+  const endIndex = startIndex + articlesPerPage;
+  const currentArticles = articles.slice(startIndex, endIndex);
 
   const handleTagClick = (tag) => {
     console.log("Selected Tag:", tag);
@@ -150,18 +103,6 @@ const Home = () => {
             <div className="col-md-9">
               <div className="feed-toggle">
                 <ul className="nav nav-pills outline-active">
-                  {user && (
-                    <li className="nav-item">
-                      <NavLink
-                        to="/yourfeed"
-                        className={`nav-link ${currentTab === "Your Feed" ? "active" : ""}`}
-                        onClick={handleYourFeedClick}
-                        end
-                      >
-                        Your Feed
-                      </NavLink>
-                    </li>
-                  )}
                   <li className="nav-item">
                     <div
                       className={`nav-link ${
@@ -227,7 +168,11 @@ const Home = () => {
             <div className="col-md-3">
               <div className="sidebar">
                 <p>Popular Tags</p>
-                <Tags tags={tags} loading={loadingTags} onTagClick={handleTagClick} />
+                <Tags
+                  tags={tags}
+                  loading={loadingTags}
+                  onTagClick={handleTagClick}
+                />
               </div>
             </div>
           </div>
