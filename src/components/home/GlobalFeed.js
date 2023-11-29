@@ -24,7 +24,6 @@ const GlobalFeed = ({ selectedTag }) => {
 
         const response = await axios.get(apiUrl);
         setArticles(response.data.articles);
-        console.log("Fetched Articles:", response.data.articles);
       } catch (error) {
         console.error("Error fetching articles:", error);
       } finally {
@@ -50,15 +49,13 @@ const GlobalFeed = ({ selectedTag }) => {
       });
     }
   };
-  
-
 
   return (
     <div>
       {loading ? (
         <div>Loading articles...</div>
       ) : (
-        globalArticles.map((article) => (
+        articles.map((article) => (
           <div key={article.slug} className="article-preview">
             <div className="article-meta">
               <a href={`/${article.author.username}`}>
