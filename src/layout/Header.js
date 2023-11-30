@@ -54,7 +54,7 @@ const Header = () => {
             // Display this content when user is logged in
             <>
               <li className="nav-item" style={{ marginLeft: "1rem" }}>
-                <a className="nav-link" href="/">
+                <NavLink className="nav-link" href="/">
                   <i
                     className="bi bi-pencil-square"
                     style={{ marginRight: "0.15rem" }}

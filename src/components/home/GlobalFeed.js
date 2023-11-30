@@ -75,17 +75,6 @@ const GlobalFeed = ({ selectedTag }) => {
     fetchArticles(newOffset);
   };
 
-  const goToPreviousPage = () => {
-    if (currentPage > 1) {
-      handlePageChange(currentPage - 1);
-    }
-  };
-
-  const goToNextPage = () => {
-    if (currentPage < totalPages) {
-      handlePageChange(currentPage + 1);
-    }
-  };
 
   return (
     <div>
@@ -145,8 +134,6 @@ const GlobalFeed = ({ selectedTag }) => {
               currentPage={currentPage}
               totalPages={totalPages}
               handlePageChange={handlePageChange}
-              goToPreviousPage={goToPreviousPage}
-              goToNextPage={goToNextPage}
             />
           )}
         </>
