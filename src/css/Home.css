@@ -59,12 +59,13 @@
     margin-bottom: 0px;
 }
 
-/* Global Feed */
+/* Toggle Buttons */
 .nav-pills.outline-active .nav-link.active {
     background: #fff !important;
     border-bottom: 2px solid #5CB85C !important;
     color: #5CB85C !important;
     cursor: default;
+
 }
 
 .nav-pills .nav-link {
@@ -76,9 +77,13 @@
     border: none;
 }
 
-.feed-toggle ul {
+/* .feed-toggle ul {
     border-bottom: 1px solid #aaa;
-    opacity: 0.5; /* Adjust the value as needed, 0 is fully transparent, and 1 is fully opaque */
+} */
+
+.feed-toggle .nav-item .nav-link{
+    opacity: 0.9;
+
 }
 
 /* Feed */

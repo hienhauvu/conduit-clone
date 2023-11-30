@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import axios from "axios";
 
 const Favorite = ({ articleSlug, onUpdateFavorite, favCount }) => {
@@ -7,18 +8,23 @@ const Favorite = ({ articleSlug, onUpdateFavorite, favCount }) => {
 
   const userToken = localStorage.getItem("userToken");
 
+  const navigate = useNavigate(); // Initialize useNavigate
+
   useEffect(() => {
     const fetchFavoriteStatus = async () => {
       try {
-        const response = await axios.get(
-          `https://api.realworld.io/api/articles/${articleSlug}`,
-          {
-            headers: {
-              Authorization: `Bearer ${userToken}`,
-            },
-          }
-        );
-        setIsFavorited(response.data.article.favorited);
+        // Check if userToken is present before making the request
+        if (userToken) {
+          const response = await axios.get(
+            `https://api.realworld.io/api/articles/${articleSlug}`,
+            {
+              headers: {
+                Authorization: `Bearer ${userToken}`,
+              },
+            }
+          );
+          setIsFavorited(response.data.article.favorited);
+        }
       } catch (error) {
         console.error("Error fetching favorite status:", error);
       }
@@ -30,7 +36,14 @@ const Favorite = ({ articleSlug, onUpdateFavorite, favCount }) => {
   const handleFavoriteToggle = async () => {
     try {
       setIsToggling(true);
-  
+
+      // Check if user is logged in
+      if (!userToken) {
+        // Redirect to the login page if user is not logged in
+        navigate("/login");
+        return;
+      }
+
       if (isFavorited) {
         await axios.delete(
           `https://api.realworld.io/api/articles/${articleSlug}/favorite`,
@@ -51,7 +64,7 @@ const Favorite = ({ articleSlug, onUpdateFavorite, favCount }) => {
           }
         );
       }
-  
+
       // Update favorite status after the toggle
       const response = await axios.get(
         `https://api.realworld.io/api/articles/${articleSlug}`,
@@ -61,19 +74,22 @@ const Favorite = ({ articleSlug, onUpdateFavorite, favCount }) => {
           },
         }
       );
-  
+
       setIsFavorited(response.data.article.favorited);
       onUpdateFavorite(response.data.article);
-  
+
       // Log whether it's favorited or not after the toggle
-      console.log(`Article ${response.data.article.favorited ? 'favorited' : 'unfavorited'}`);
+      console.log(
+        `Article ${
+          response.data.article.favorited ? "favorited" : "unfavorited"
+        }`
+      );
     } catch (error) {
       console.error("Error toggling favorite:", error);
     } finally {
       setIsToggling(false);
     }
   };
-  
 
   return (
     <button
