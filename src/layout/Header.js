@@ -54,22 +54,22 @@ const Header = () => {
             // Display this content when user is logged in
             <>
               <li className="nav-item" style={{ marginLeft: "1rem" }}>
-                <NavLink className="nav-link" href="/">
+                <NavLink className="nav-link" to="/editor">
                   <i
                     className="bi bi-pencil-square"
                     style={{ marginRight: "0.15rem" }}
                   ></i>
                   New Article
-                </a>
+                </NavLink>
               </li>
               <li className="nav-item" style={{ marginLeft: "1rem" }}>
-                <a className="nav-link" to="/settings">
+                <NavLink className="nav-link" to="/settings">
                   <i
                     className="bi bi-gear-wide"
                     style={{ marginRight: "0.15rem" }}
                   ></i>
                   Settings
-                </a>
+                </NavLink>
               </li>
               <li
                 className="nav-item"
