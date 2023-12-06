@@ -1,76 +1,123 @@
+// Articles_View.js
 import React, { useEffect, useState } from "react";
-import axios from "axios";
 import { useParams } from "react-router-dom";
 import FollowButton from "../buttons/FollowButton";
 import FavoriteButton from "../buttons/FavoriteButton";
 import "../../css/Articles.css";
+import Comment from "./Comment";
+import axios from "axios";
 
 const Articles_View = () => {
-  const { slug } = useParams();
   const [user, setUser] = useState(null);
   const [article, setArticle] = useState(null);
   const [isFollowing, setIsFollowing] = useState(false);
   const [isFavorited, setIsFavorited] = useState(false);
   const [favCount, setFavCount] = useState(0);
+  const [comments, setComments] = useState([]);
+  const [newComment, setNewComment] = useState("");
+  const [userInfo, setUserInfo] = useState(null);
 
   const userToken = localStorage.getItem("userToken");
+  const { slug } = useParams();
 
   useEffect(() => {
-    const fetchArticle = async () => {
+    const fetchData = async () => {
       try {
-        const response = await axios.get(
+        const articleResponse = await axios.get(
           `https://api.realworld.io/api/articles/${slug}`
         );
-        setArticle(response.data.article);
+        setArticle(articleResponse.data.article);
 
-        // Fetch author's profile after getting the article
-        fetchAuthorProfile(response.data.article.author.username);
-        setIsFavorited(response.data.article.favorited);
-        setFavCount(response.data.article.favoritesCount);
-
-        console.log(response.data.article.favorited);
-        console.log(response.data.article.favoritesCount);
-        // Fetch article's favorite count and status
-
-        document.title = response.data.article.title;
-        //Fetch Favorited status
-      } catch (error) {
-        console.error("Error fetching article:", error);
-      }
-    };
-
-    const fetchAuthorProfile = async (authorUsername) => {
-      try {
-        const response = await axios.get(
-          `https://api.realworld.io/api/profiles/${authorUsername}`,
+        const authorProfileResponse = await axios.get(
+          `https://api.realworld.io/api/profiles/${articleResponse.data.article.author.username}`,
           {
             headers: {
               Authorization: `Bearer ${userToken}`,
             },
           }
         );
-        setUser(response.data.profile);
-        setIsFollowing(response.data.profile.following);
-        console.log("Is Followed: ", response.data.profile.following);
+        setUser(authorProfileResponse.data.profile);
+        setIsFollowing(authorProfileResponse.data.profile.following);
+
+        fetchUserInfo(userToken); //for getting user's image
+
+        fetchComments(); // Move the comment fetching logic here
       } catch (error) {
-        console.error("Error fetching author profile:", error);
+        console.error("Error fetching data:", error);
       }
     };
-    console.log("userToken:", userToken);
 
-    fetchArticle();
+    fetchData();
   }, [slug, userToken]);
+
+  const fetchUserInfo = async (token) => {
+    try {
+      const response = await axios.get("https://api.realworld.io/api/user", {
+        headers: {
+          Authorization: `Token ${token}`,
+        },
+      });
+
+      // Assuming the API returns user information
+      const userData = response.data.user;
+
+      // Set user information in state
+      setUserInfo(userData);
+    } catch (error) {
+      console.error("Error fetching user information:", error);
+    }
+  };
+
+  const handleCommentChange = (event) => {
+    setNewComment(event.target.value);
+  };
+
+  const handleCommentSubmit = async (event) => {
+    event.preventDefault();
+
+    try {
+      const response = await axios.post(
+        `https://api.realworld.io/api/articles/${slug}/comments`,
+        { comment: { body: newComment } },
+        {
+          headers: {
+            Authorization: `Bearer ${userToken}`,
+          },
+        }
+      );
+
+      setComments([...comments, response.data.comment]);
+      setNewComment("");
+    } catch (error) {
+      console.error("Error submitting comment:", error);
+    }
+  };
 
   const handleUpdateFollow = (updatedProfile) => {
     setUser(updatedProfile);
     setIsFollowing(updatedProfile.following);
   };
 
+  const fetchComments = async () => {
+    try {
+      const commentsResponse = await axios.get(
+        `https://api.realworld.io/api/articles/${slug}/comments`,
+        {
+          headers: {
+            Authorization: `Bearer ${userToken}`,
+          },
+        }
+      );
+      setComments(commentsResponse.data.comments);
+    } catch (error) {
+      console.error("Error fetching comments:", error);
+    }
+  };
+
   if (!article || !user) {
     return <div>Loading...</div>;
   }
 
-  // Format Date
   const formattedDate = new Date(article.createdAt).toLocaleDateString(
     "en-US",
     {
@@ -87,7 +134,12 @@ const Articles_View = () => {
           <h1>{article.title}</h1>
           <div className="article-meta_1">
             <a href={`/${article.author.username}`}>
-              <img src={article.author.image} alt="" />
+              <img
+                src={article.author.image}
+                alt=""
+                width="32px"
+                height="32px"
+              />
             </a>
             <div className="info">
               <a href={`/${article.author.username}`}>
@@ -96,19 +148,13 @@ const Articles_View = () => {
               <span className="date">{formattedDate}</span>
             </div>
             <span>
+              <FavoriteButton articleSlug={article.slug} />
               <FollowButton
                 key={isFollowing ? "following" : "notFollowing"}
                 profileUsername={user.username}
                 onUpdateFollow={handleUpdateFollow}
                 pageStyle="article-button"
               />
-              {/* Favorite Button */}
-              <FavoriteButton articleSlug={article.slug} />
-            </span>
-            {/* IF CURRENT USER IS AUTHOR */}
-            <span style={{ display: "none" }}>
-              <button>Edit</button>
-              <button>Delete</button>
             </span>
           </div>
         </div>
@@ -132,7 +178,12 @@ const Articles_View = () => {
         <div className="article-actions">
           <div className="article-meta_2">
             <a href={`/${article.author.username}`}>
-              <img src={article.author.image} alt="" />
+              <img
+                src={article.author.image}
+                alt=""
+                width="32px"
+                height="32px"
+              />
             </a>
             <div className="info">
               <a href={`/${article.author.username}`}>
@@ -141,23 +192,53 @@ const Articles_View = () => {
               <span className="date">{formattedDate}</span>
             </div>
             <span>
+              <FavoriteButton articleSlug={article.slug} />
               <FollowButton
                 key={isFollowing ? "following" : "notFollowing"}
                 profileUsername={user.username}
                 onUpdateFollow={handleUpdateFollow}
                 pageStyle="article-button"
               />
-              <FavoriteButton articleSlug={article.slug} />
-            </span>
-            {/* IF CURRENT USER IS AUTHOR */}
-            <span style={{ display: "none" }}>
-              <button>Edit</button>
-              <button>Delete</button>
             </span>
           </div>
-          {/* Comment Section */}
-          <div className="row">
-            <div className="col-md-8 offset-md-2">Comment</div>
+        </div>
+        {/* Comment */}
+        <div className="row mb-5">
+          <div className="col-xs-12 col-md-8 offset-md-2">
+            <form className="card comment-form" onSubmit={handleCommentSubmit}>
+              <fieldset>
+                <div className="card-block">
+                  <textarea
+                    className="form-control"
+                    placeholder="Write a comment..."
+                    rows="3"
+                    value={newComment}
+                    onChange={handleCommentChange}
+                  ></textarea>
+                </div>
+                <div className="card-footer">
+                  {userInfo && userInfo.image && (
+                    <img
+                      className="comment-author-img"
+                      src={userInfo.image}
+                      alt="user's image"
+                    />
+                  )}
+                  <button className="btn btn-sm btn-success" type="submit">
+                    Post Comment
+                  </button>
+                </div>
+              </fieldset>
+            </form>
+            <div className="comments">
+              {comments.map((comment) => (
+                <Comment
+                  key={comment.id}
+                  comment={comment}
+                  fetchComments={fetchComments}
+                />
+              ))}
+            </div>
           </div>
         </div>
       </div>

@@ -41,3 +41,8 @@
   padding-left: 5rem !important;
   padding-right: 5rem !important;
 }
+
+.form-group{
+  border: 1px solid #c0c0c0 !important;
+  border-radius: 0.3rem !important;
+}

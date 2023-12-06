@@ -77,27 +77,26 @@ const Home = () => {
         <div className="container page">
           <div className="row">
             <div className="col-md-9">
-              <div className="feed-toggle">
+              <div className="feed-toggle mt-4">
                 <ul className="nav nav-pills outline-active">
-                  <li className="nav-item">
-                    {userToken && (
+                  {userToken && (
+                    <li className="nav-item">
                       <div
                         className={`nav-link ${
-                          !selectedTag && feedStatus === "your" ? "active" : ""
+                          feedStatus === "your" && !selectedTag ? "active" : ""
                         }`}
-                        style={{ cursor: "pointer", color: "#555" }}
                         onClick={() => handleFeedStatusChange("your")}
+                        style={{ color: "#555", cursor: "pointer" }}
                       >
                         Your Feed
                       </div>
-                    )}
-                  </li>
+                    </li>
+                  )}
+
                   <li className="nav-item">
                     <div
                       className={`nav-link ${
-                        (!selectedTag && feedStatus !== "your") || !userToken
-                          ? "active"
-                          : ""
+                        !selectedTag && feedStatus === "global" ? "active" : ""
                       }`}
                       onClick={() => {
                         setSelectedTag(null);
@@ -108,10 +107,11 @@ const Home = () => {
                       Global Feed
                     </div>
                   </li>
+
                   {selectedTag && (
                     <li className="nav-item">
                       <div
-                        className="nav-link active"
+                        className={`nav-link ${selectedTag ? "active" : ""}`}
                         style={{ cursor: "pointer" }}
                       >
                         #{selectedTag}

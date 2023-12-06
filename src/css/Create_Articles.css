@@ -1,0 +1,25 @@
+.btn{
+    float: right !important;
+}
+
+.btn-primary:hover {
+    color: #fff;
+    background-color: #449d44 !important;
+    border-color: #419641 !important;
+}
+
+.btn-primary {
+    color: #fff;
+    background-color: #5CB85C !important;
+    border-color: #5CB85C !important;
+}
+
+.btn-lg {
+    padding: 0.75rem 1.5rem !important;
+    font-size: 1.25rem !important;
+    border-radius: 0.3rem !important;
+}
+
+.container.page{
+    margin-top: 1.5rem !important;
+}

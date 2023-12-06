@@ -8,30 +8,27 @@ const Header = () => {
   const [userInfo, setUserInfo] = useState(null);
 
   useEffect(() => {
-    // Get userToken from localStorage when the component mounts
     const tokenFromStorage = localStorage.getItem("userToken");
     setUserToken(tokenFromStorage);
 
-    console.log("This is Token from Header: ", { tokenFromStorage });
-
-    // Fetch user information if the user is logged in
     if (tokenFromStorage) {
       fetchUserInfo(tokenFromStorage);
     }
-  }, []); // Empty dependency array ensures the effect runs only once when the component mounts
+
+    if (tokenFromStorage) {
+      console.log("This is token from header: ", tokenFromStorage);
+    }
+  }, []);
 
   const fetchUserInfo = async (token) => {
     try {
       const response = await axios.get("https://api.realworld.io/api/user", {
         headers: {
-          Authorization: `Token ${token}`,
+          Authorization: `Bearer ${token}`,
         },
       });
 
-      // Assuming the API returns user information
       const userData = response.data.user;
-
-      // Set user information in state
       setUserInfo(userData);
     } catch (error) {
       console.error("Error fetching user information:", error);
@@ -46,7 +43,7 @@ const Header = () => {
         </a>
         <ul className="nav navbar-nav flex-row ml-auto">
           <li className="nav-item">
-            <NavLink className="nav-link" exact to="/">
+            <NavLink className="nav-link" to="/">
               Home
             </NavLink>
           </li>
@@ -99,14 +96,14 @@ const Header = () => {
             // Display this content when user is not logged in
             <>
               <li className="nav-item" style={{ marginLeft: "1rem" }}>
-                <NavLink className="nav-link" to="/login">
+                <NavLink className="nav-link" href="/login">
                   Sign in
                 </NavLink>
               </li>
               <li className="nav-item" style={{ marginLeft: "1rem" }}>
-                <NavLink className="nav-link" to="/register">
+                <a className="nav-link" href="/register">
                   Sign up
-                </NavLink>
+                </a>
               </li>
             </>
           )}

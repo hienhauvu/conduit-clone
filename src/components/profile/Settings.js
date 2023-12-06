@@ -51,8 +51,6 @@ const Settings = () => {
           setEmail(response.data.user.email || "");
 
           console.log({ userToken });
-
-          
         })
         .catch((error) => {
           // Handle error
@@ -70,10 +68,10 @@ const Settings = () => {
         {
           user: {
             email,
-            password: newPassword, // Include the new password in the request payload
+            password: newPassword,
             username,
             bio,
-            image: profilePictureLink, // Use the profilePictureLink for the image field
+            image: profilePictureLink,
           },
         },
         {
@@ -83,11 +81,15 @@ const Settings = () => {
         }
       );
 
-      // Assuming the API returns a user object upon successful update
+      // Assuming the API returns a user object with a new token upon successful update
       const updatedUser = response.data.user;
+      const newToken = response.data.user.token;
 
       // Update the user state with the new data
       setUser(updatedUser);
+
+      // Update the token in localStorage with the new token
+      localStorage.setItem("userToken", newToken);
 
       // Display updated user's data to console
       console.log("Updated User:", updatedUser);
@@ -100,42 +102,17 @@ const Settings = () => {
         success: true,
         message: "Settings updated successfully!",
       });
-    } catch (error) {
-      if (error.response) {
-        // The request was made and the server responded with an error status code
-        console.error("Error status:", error.response.status);
-        console.error("Error data:", error.response.data);
 
-        // Handle specific error codes
-        if (error.response.status === 401) {
-          console.error("Unauthorized: Please check your credentials.");
-        } else if (error.response.status === 422) {
-          console.error(
-            "Unexpected error. Details:",
-            error.response.data.errors.body
-          );
-        } else {
-          console.error("An unexpected error occurred.");
-          setUpdateStatus({
-            success: false,
-            message: "Failed to update settings. Please try again.",
-          });
-        }
-      } else if (error.request) {
-        // The request was made but no response was received
-        console.error("No response received from the server.");
-        setUpdateStatus({
-          success: false,
-          message: "Failed to update settings. Please try again.",
-        });
-      } else {
-        // Something happened in setting up the request that triggered an Error
-        console.error("Error setting up the request:", error.message);
-        setUpdateStatus({
-          success: false,
-          message: "Failed to update settings. Please try again.",
-        });
-      }
+      navigate(`/${response.user.username}`);
+    } catch (error) {
+      console.error("Error status:", error.response.status);
+      console.error("Error data:", error.response.data);
+
+      // Set failure message in the state
+      setUpdateStatus({
+        success: false,
+        message: "Failed to update settings. Please try again.",
+      });
     }
   };
 
@@ -200,16 +177,15 @@ const Settings = () => {
                   onChange={(e) => setNewPassword(e.target.value)}
                 />
               </div>
-              <div className="form-group">
-                <button
-                  type="submit"
-                  className="btn btn-lg btn-success float-end btn-setting"
-                >
-                  Update Settings
-                </button>
-              </div>
+              <button
+                type="submit"
+                className="btn btn-lg btn-success float-end btn-setting"
+              >
+                Update Settings
+              </button>
             </form>
-            <div className="text-center"
+            <div
+              className="text-center"
               style={{
                 marginTop: "90px",
                 color: updateStatus.success ? "green" : "red",
